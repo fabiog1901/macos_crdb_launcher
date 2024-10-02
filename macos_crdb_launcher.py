@@ -19,6 +19,7 @@ class App:
         self.pid = ""
 
         # set Timer callback at 5s
+        # the timer checks that CRDB is still alive
         self.timer = rumps.Timer(self.on_tick, 5)
         self.timer.stop()
 
@@ -46,6 +47,7 @@ class App:
             key="A",
         )
 
+        # need a custom quit button to make sure crdb shuts down before quitting
         self.quit_button = rumps.MenuItem(
             title="Quit",
             callback=self.graceful_shutdown,
@@ -69,27 +71,28 @@ class App:
             self.configure_autostart_button.state = True
             self.start_stop_crdb(self.start_stop_button)
 
-    def write_config(self):
-        with self.app.open("macos_crdb_launcher.ini", "w") as f:
-            self.config.write(f)
-
     def read_config(self):
+        # try reading the default ini file
         try:
             with self.app.open("macos_crdb_launcher.ini", "r") as f:
                 self.config.read_file(f)
 
         except:
             # if the file doesn't exist, create a stub with default values
-            with self.app.open("macos_crdb_launcher.ini", "w") as f:
-                self.config.set(
-                    "DEFAULT",
-                    "start",
-                    "/usr/local/bin/cockroach start-single-node --insecure --store=/tmp/cockroach-data",
-                )
-                self.config.set("DEFAULT", "autostart", "no")
-                self.config.set("DEFAULT", "dbconsole_url", "http://localhost:8080")
+            self.config.set(
+                "DEFAULT",
+                "start",
+                "/usr/local/bin/cockroach start-single-node --insecure --store=/tmp/cockroach-data",
+            )
+            self.config.set("DEFAULT", "autostart", "no")
+            self.config.set("DEFAULT", "dbconsole_url", "http://localhost:8080")
+            self.config.set("DEFAULT", "autostart", "no")
 
-                self.config.write(f)
+            self.write_config()
+
+    def write_config(self):
+        with self.app.open("macos_crdb_launcher.ini", "w") as f:
+            self.config.write(f)
 
     def on_tick(self, sender):
         # check the pid is still valid
@@ -165,13 +168,12 @@ class App:
 
     def configure_autostart(self, sender):
         if sender.state:
-            sender.state = not sender.state
             self.config.set("DEFAULT", "autostart", "no")
-            self.write_config()
         else:
-            sender.state = not sender.state
             self.config.set("DEFAULT", "autostart", "yes")
-            self.write_config()
+
+        sender.state = not sender.state
+        self.write_config()
 
     def graceful_shutdown(self, sender):
         self.crdb_shutdown()
