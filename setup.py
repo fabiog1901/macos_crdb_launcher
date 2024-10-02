@@ -1,6 +1,6 @@
 from setuptools import setup
 
-APP = ["macos_crdb_launcher.py"]
+APP = ["CRDB_Launcher.py"]
 DATA_FILES = ["cockroachdb_logo.png"]
 OPTIONS = {
     "argv_emulation": True,

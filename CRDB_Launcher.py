@@ -11,7 +11,7 @@ class App:
 
         # rumps app
         self.app = rumps.App(
-            "macos_crdb_launcher", icon="cockroachdb_logo.png", quit_button=None
+            "CRD_auncher", icon="cockroachdb_logo.png", quit_button=None
         )
 
         self.config = ConfigParser()
@@ -28,6 +28,9 @@ class App:
         self.start_stop_button = rumps.MenuItem(
             title="Start CockroachDB", callback=self.start_stop_crdb, key="S"
         )
+        self.open_sql_terminal_button = rumps.MenuItem(
+            title="Open SQL prompt", callback=self.open_sql_terminal, key="T"
+        )
         self.open_dbconsole_button = rumps.MenuItem(
             title="Open DBConsole", callback=self.open_dbconsole, key="W"
         )
@@ -35,6 +38,11 @@ class App:
             title="Configure Start Command...",
             callback=self.configure_start_command,
             key="C",
+        )
+        self.configure_sql_prompt_button = rumps.MenuItem(
+            title="Configure SQL Prompt Command...",
+            callback=self.configure_sql_prompt_command,
+            key="Q",
         )
         self.configure_dbconsole_button = rumps.MenuItem(
             title="Configure DBConsole URL...",
@@ -59,9 +67,13 @@ class App:
             None,
             self.start_stop_button,
             None,
+            self.open_sql_terminal_button,
             self.open_dbconsole_button,
+            None,
             self.configure_start_button,
+            self.configure_sql_prompt_button,
             self.configure_dbconsole_button,
+            None,
             self.configure_autostart_button,
             None,
             self.quit_button,
@@ -87,6 +99,9 @@ class App:
             self.config.set("DEFAULT", "autostart", "no")
             self.config.set("DEFAULT", "dbconsole_url", "http://localhost:8080")
             self.config.set("DEFAULT", "autostart", "no")
+            self.config.set(
+                "DEFAULT", "sql_prompt", "/usr/local/bin/cockroach sql --insecure"
+            )
 
             self.write_config()
 
@@ -129,6 +144,13 @@ class App:
     def open_dbconsole(self, sender):
         webbrowser.open_new_tab(self.config.get("DEFAULT", "dbconsole_url"))
 
+    def open_sql_terminal(self, sender):
+        subprocess.run(
+            shlex.split(
+                f"""osascript -e 'tell app "Terminal" to activate' -e 'tell app "Terminal" to do script "{self.config.get("DEFAULT", "sql_prompt")}" '"""
+            )
+        )
+
     def crdb_shutdown(self):
         p = subprocess.run(["kill", self.pid])
 
@@ -144,7 +166,7 @@ class App:
         resp = rumps.Window(
             "Enter the command to run CockroachDB",
             "Start Up Command",
-            self.config.get("DEFAULT", "start"),
+            self.config.get("DEFAULT", "start", fallback=""),
             cancel="Cancel",
             dimensions=(320, 80),
         ).run()
@@ -157,13 +179,26 @@ class App:
         resp = rumps.Window(
             "Enter the DBConsole URL",
             "DBConsole URL",
-            self.config.get("DEFAULT", "dbconsole_url"),
+            self.config.get("DEFAULT", "dbconsole_url", fallback=""),
             cancel="Cancel",
             dimensions=(320, 60),
         ).run()
 
         if resp.clicked:
             self.config.set("DEFAULT", "dbconsole_url", resp.text)
+            self.write_config()
+
+    def configure_sql_prompt_command(self, sender):
+        resp = rumps.Window(
+            "Enter the command to run the SQL prompt",
+            "SQL Prompt Command",
+            self.config.get("DEFAULT", "sql_prompt", fallback=""),
+            cancel="Cancel",
+            dimensions=(320, 60),
+        ).run()
+
+        if resp.clicked:
+            self.config.set("DEFAULT", "sql_prompt", resp.text)
             self.write_config()
 
     def configure_autostart(self, sender):

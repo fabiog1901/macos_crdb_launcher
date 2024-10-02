@@ -1,4 +1,4 @@
-# MacOS_CRDB_Launcher
+# CRDB Launcher for MacOS
 
 Simple MacOS menu utility to run CockroachDB locally.
 
@@ -12,7 +12,7 @@ Requires Python3.8 from <https://www.python.org/downloads/>.
 
 ```bash
 pip3.8 install -U pip
-pip3.8 install rumps py2app
+pip3.8 install rumps py2app applescript
 
 brew install create-dmg
 ```
@@ -22,13 +22,19 @@ brew install create-dmg
 Test locally without building
 
 ```bash
-python3.8 macos_crdb_launcher.py
+python3.8 CRDB_Launcher.py
 ```
 
 Build App
 
 ```bash
-python3.8 setup.py py2app
+rm -rf build dist && python3.8 setup.py py2app
+```
+
+Test App by starting it from the terminal
+
+```bash
+dist/CRDB_Launcher.app/Contents/MacOS/CRDB_Launcher 
 ```
 
 Build DMG file
@@ -36,7 +42,7 @@ Build DMG file
 ```bash
 # https://github.com/create-dmg/create-dmg
 
-create-dmg \
+rm -rf CRDB_Launcher.dmg && create-dmg \
   --volname "CRDB_launcher Installer" \
   --volicon "icon.icns" \
   --window-pos 100 120 \
