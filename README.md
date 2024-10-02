@@ -12,7 +12,7 @@ Requires Python3.8 from <https://www.python.org/downloads/>.
 
 ```bash
 pip3.8 install -U pip
-pip3.8 install rumps py2app applescript
+pip3.8 install rumps py2app
 
 brew install create-dmg
 ```
