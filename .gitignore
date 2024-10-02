@@ -1,3 +1,4 @@
 build/
 dist/
 *.dmg
+.DS_Store
